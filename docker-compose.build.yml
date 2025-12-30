@@ -1,0 +1,25 @@
+---
+# 用法：
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up --build -d
+#
+# 说明：
+# - 基础的 docker-compose.yml 默认使用官方发布镜像（拉取 image）。
+# - 叠加本文件后，会改为使用本仓库的 Dockerfile 进行本地构建（build）。
+services:
+  umami:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # 这些会在 "docker build" 阶段生效，对应 Dockerfile 里的 ARG
+      # 值来源：同目录的 .env 或你的 shell 环境变量
+      args:
+        # Dockerfile: ARG NODE_IMAGE_VERSION
+        NODE_IMAGE_VERSION: 22-alpine
+        # Dockerfile(builder): ARG BASE_PATH
+        BASE_PATH: /analytics
+        # Dockerfile(runner): ARG NODE_OPTIONS
+        NODE_OPTIONS: --max-old-space-size=4096
+        # Dockerfile(runner): ARG PRISMA_VERSION
+        PRISMA_VERSION: 6.19.0
+    image: umami-local:latest
+
