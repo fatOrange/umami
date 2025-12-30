@@ -13,11 +13,14 @@ services:
       # 这些会在 "docker build" 阶段生效，对应 Dockerfile 里的 ARG
       # 值来源：同目录的 .env 或你的 shell 环境变量
       args:
+        # Dockerfile: ARG NODE_IMAGE_REPO（用镜像加速站点：docker.1ms.run/node）
+        NODE_IMAGE_REPO: ${NODE_IMAGE_REPO:-docker.1ms.run/node}
         # Dockerfile: ARG NODE_IMAGE_VERSION
         NODE_IMAGE_VERSION: 22-alpine
-        # Dockerfile: ARG NPM_REGISTRY（用于加速 pnpm install / pnpm add 的包下载）
-        # 常用： https://registry.npmmirror.com
-        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
+        # Dockerfile: ARG NPM_REGISTRY（用于 pnpm install / pnpm add 的包下载）
+        # 注意：npmmirror 在部分网络下会出现 ETIMEDOUT / integrity 问题；建议显式配置到你稳定可用的源
+        # 例：NPM_REGISTRY=https://registry.npmjs.org 或公司内网 Nexus
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://mirrors.huaweicloud.com/repository/npm/}
         # Dockerfile(builder): ARG BASE_PATH
         BASE_PATH: /analytics
         # Dockerfile(runner): ARG NODE_OPTIONS

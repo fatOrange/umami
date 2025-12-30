@@ -1,9 +1,13 @@
+ARG NODE_IMAGE_REPO="node"
 ARG NODE_IMAGE_VERSION="22-alpine"
 
 # Install dependencies only when needed
-FROM node:${NODE_IMAGE_VERSION} AS deps
-# 可通过 build-arg 覆盖，用于加速 npm/pnpm 下载（例如 https://registry.npmmirror.com）
-ARG NPM_REGISTRY="https://registry.npmmirror.com"
+FROM ${NODE_IMAGE_REPO}:${NODE_IMAGE_VERSION} AS deps
+# 可通过 build-arg 覆盖，用于加速 npm/pnpm 下载（例如 https://registry.npmmirror.com 或公司内网 Nexus）
+ARG NPM_REGISTRY="https://registry.npmjs.org"
+ARG PNPM_FETCH_TIMEOUT="600000"
+ARG PNPM_FETCH_RETRIES="5"
+ARG PNPM_NETWORK_CONCURRENCY="8"
 ENV NPM_CONFIG_REGISTRY=$NPM_REGISTRY
 ENV PNPM_CONFIG_REGISTRY=$NPM_REGISTRY
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
@@ -11,10 +15,13 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN npm install -g pnpm
+RUN pnpm config set fetch-timeout $PNPM_FETCH_TIMEOUT \
+  && pnpm config set fetch-retries $PNPM_FETCH_RETRIES \
+  && pnpm config set network-concurrency $PNPM_NETWORK_CONCURRENCY
 RUN pnpm install --frozen-lockfile
 
 # Rebuild the source code only when needed
-FROM node:${NODE_IMAGE_VERSION} AS builder
+FROM ${NODE_IMAGE_REPO}:${NODE_IMAGE_VERSION} AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -29,12 +36,15 @@ ENV DATABASE_URL="postgresql://user:pass@localhost:5432/dummy"
 RUN npm run build-docker
 
 # Production image, copy all the files and run next
-FROM node:${NODE_IMAGE_VERSION} AS runner
+FROM ${NODE_IMAGE_REPO}:${NODE_IMAGE_VERSION} AS runner
 WORKDIR /app
 
 ARG PRISMA_VERSION="6.19.0"
 ARG NODE_OPTIONS
 ARG NPM_REGISTRY="https://registry.npmjs.org"
+ARG PNPM_FETCH_TIMEOUT="600000"
+ARG PNPM_FETCH_RETRIES="5"
+ARG PNPM_NETWORK_CONCURRENCY="8"
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -47,6 +57,9 @@ RUN adduser --system --uid 1001 nextjs
 RUN set -x \
     && apk add --no-cache curl \
     && npm install -g pnpm
+RUN pnpm config set fetch-timeout $PNPM_FETCH_TIMEOUT \
+  && pnpm config set fetch-retries $PNPM_FETCH_RETRIES \
+  && pnpm config set network-concurrency $PNPM_NETWORK_CONCURRENCY
 
 # Script dependencies
 RUN pnpm --allow-build='@prisma/engines' add npm-run-all dotenv chalk semver \
