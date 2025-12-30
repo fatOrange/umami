@@ -27,5 +27,7 @@ services:
         NODE_OPTIONS: --max-old-space-size=4096
         # Dockerfile(runner): ARG PRISMA_VERSION
         PRISMA_VERSION: 6.19.0
+        # Dockerfile(builder): ARG PRISMA_ENGINES_MIRROR（Prisma engine 下载镜像，用于替换 binaries.prisma.sh）
+        PRISMA_ENGINES_MIRROR: ${PRISMA_ENGINES_MIRROR:-https://registry.npmmirror.com/-/binary/prisma}
     image: umami-local:latest
 
