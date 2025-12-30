@@ -15,7 +15,9 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN npm install -g pnpm
-RUN pnpm config set fetch-timeout $PNPM_FETCH_TIMEOUT \
+RUN npm config set registry $NPM_REGISTRY
+RUN pnpm config set registry $NPM_REGISTRY \
+  && pnpm config set fetch-timeout $PNPM_FETCH_TIMEOUT \
   && pnpm config set fetch-retries $PNPM_FETCH_RETRIES \
   && pnpm config set network-concurrency $PNPM_NETWORK_CONCURRENCY
 RUN pnpm install --frozen-lockfile
@@ -28,6 +30,10 @@ COPY . .
 COPY docker/middleware.ts ./src
 
 ARG BASE_PATH
+ARG NPM_REGISTRY="https://registry.npmjs.org"
+
+ENV NPM_CONFIG_REGISTRY=$NPM_REGISTRY
+ENV PNPM_CONFIG_REGISTRY=$NPM_REGISTRY
 
 ENV BASE_PATH=$BASE_PATH
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -57,7 +63,9 @@ RUN adduser --system --uid 1001 nextjs
 RUN set -x \
     && apk add --no-cache curl \
     && npm install -g pnpm
-RUN pnpm config set fetch-timeout $PNPM_FETCH_TIMEOUT \
+RUN npm config set registry $NPM_REGISTRY
+RUN pnpm config set registry $NPM_REGISTRY \
+  && pnpm config set fetch-timeout $PNPM_FETCH_TIMEOUT \
   && pnpm config set fetch-retries $PNPM_FETCH_RETRIES \
   && pnpm config set network-concurrency $PNPM_NETWORK_CONCURRENCY
 
