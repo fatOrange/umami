@@ -2,6 +2,10 @@ ARG NODE_IMAGE_VERSION="22-alpine"
 
 # Install dependencies only when needed
 FROM node:${NODE_IMAGE_VERSION} AS deps
+# 可通过 build-arg 覆盖，用于加速 npm/pnpm 下载（例如 https://registry.npmmirror.com）
+ARG NPM_REGISTRY="https://registry.npmmirror.com"
+ENV NPM_CONFIG_REGISTRY=$NPM_REGISTRY
+ENV PNPM_CONFIG_REGISTRY=$NPM_REGISTRY
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -30,10 +34,13 @@ WORKDIR /app
 
 ARG PRISMA_VERSION="6.19.0"
 ARG NODE_OPTIONS
+ARG NPM_REGISTRY="https://registry.npmjs.org"
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS=$NODE_OPTIONS
+ENV NPM_CONFIG_REGISTRY=$NPM_REGISTRY
+ENV PNPM_CONFIG_REGISTRY=$NPM_REGISTRY
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs

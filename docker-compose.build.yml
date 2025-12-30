@@ -15,6 +15,9 @@ services:
       args:
         # Dockerfile: ARG NODE_IMAGE_VERSION
         NODE_IMAGE_VERSION: 22-alpine
+        # Dockerfile: ARG NPM_REGISTRY（用于加速 pnpm install / pnpm add 的包下载）
+        # 常用： https://registry.npmmirror.com
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
         # Dockerfile(builder): ARG BASE_PATH
         BASE_PATH: /analytics
         # Dockerfile(runner): ARG NODE_OPTIONS
